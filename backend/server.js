@@ -11,12 +11,14 @@ app.use(express.json());
 
 // Routes
 const transactionRoutes = require('./src/routes/transactions');
+const insightRoutes = require('./src/routes/insights');
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'FlowSpend API is running' });
 });
 
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/insights', insightRoutes);
 
 // Start Server
 app.listen(PORT, () => {

@@ -1,11 +1,12 @@
+import { supabase } from '../lib/supabase';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// A mock token function. In a real app with Supabase Auth, you'd get the session token here.
-const getAuthHeaders = () => {
-  // For local testing before Supabase UI login is built, we might bypass or mock this
+const getAuthHeaders = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
   return {
     'Content-Type': 'application/json',
-    // 'Authorization': `Bearer ${localStorage.getItem('supabase.auth.token')}`
+    ...(session ? { 'Authorization': `Bearer ${session.access_token}` } : {})
   };
 };
 
@@ -13,7 +14,7 @@ export const api = {
   async parseTransaction(raw_text) {
     const res = await fetch(`${API_URL}/transactions/parse`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: await getAuthHeaders(),
       body: JSON.stringify({ raw_text })
     });
     if (!res.ok) throw new Error('Failed to parse');
@@ -23,7 +24,7 @@ export const api = {
   async saveTransaction(data) {
     const res = await fetch(`${API_URL}/transactions`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: await getAuthHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error('Failed to save');
@@ -36,7 +37,7 @@ export const api = {
     if (endDate) url.searchParams.append('endDate', endDate);
     
     const res = await fetch(url.toString(), {
-      headers: getAuthHeaders()
+      headers: await getAuthHeaders()
     });
     if (!res.ok) throw new Error('Failed to fetch transactions');
     return res.json();
@@ -45,7 +46,7 @@ export const api = {
   async updateTransaction(id, updates) {
     const res = await fetch(`${API_URL}/transactions/${id}`, {
       method: 'PATCH',
-      headers: getAuthHeaders(),
+      headers: await getAuthHeaders(),
       body: JSON.stringify(updates)
     });
     if (!res.ok) throw new Error('Failed to update');
@@ -55,9 +56,17 @@ export const api = {
   async deleteTransaction(id) {
     const res = await fetch(`${API_URL}/transactions/${id}`, {
       method: 'DELETE',
-      headers: getAuthHeaders()
+      headers: await getAuthHeaders()
     });
     if (!res.ok) throw new Error('Failed to delete');
+    return res.json();
+  },
+
+  async getInsights() {
+    const res = await fetch(`${API_URL}/insights/summary`, {
+      headers: await getAuthHeaders()
+    });
+    if (!res.ok) throw new Error('Failed to fetch insights');
     return res.json();
   }
 };

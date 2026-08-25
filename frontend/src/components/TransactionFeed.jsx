@@ -1,5 +1,6 @@
-import React from 'react';
-import { MoreHorizontal, Coffee, ShoppingBag, Zap, Heart, Flame, ShieldAlert } from 'lucide-react';
+import React, { useState } from 'react';
+import { MoreHorizontal, Coffee, ShoppingBag, Zap, Heart, Flame, ShieldAlert, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { api } from '../services/api';
 
 // A simple mood-to-color mapping for badges
 const MOOD_STYLES = {
@@ -23,36 +24,83 @@ const MOOD_ICONS = {
 function TransactionItem({ tx, onDelete }) {
   const Icon = MOOD_ICONS[tx.mood_tag] || Coffee;
   const moodStyle = MOOD_STYLES[tx.mood_tag] || MOOD_STYLES.Boredom;
+  
+  const [reflection, setReflection] = useState(tx.reflection_status || 'None');
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleReflect = async (status) => {
+    if (status === reflection || isUpdating) return;
+    setIsUpdating(true);
+    try {
+      await api.updateTransaction(tx.id, { reflection_status: status });
+      setReflection(status);
+    } catch (err) {
+      console.error("Reflection failed:", err);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
-    <div className="group flex items-center justify-between p-4 bg-white border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-md rounded-2xl transition-all mb-3">
-      <div className="flex items-center gap-4">
-        <div className={`p-3 rounded-xl border ${moodStyle} bg-white`}>
-          <Icon size={20} className="opacity-80" />
-        </div>
-        <div>
-          <h3 className="font-bold text-slate-900">{tx.merchant || tx.category}</h3>
-          <div className="flex items-center gap-2 mt-1">
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${moodStyle}`}>
-              {tx.mood_tag}
-            </span>
-            <span className="text-xs text-slate-400 capitalize">
-              • {tx.category}
-            </span>
+    <div className="group flex flex-col p-4 bg-white border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-md rounded-2xl transition-all mb-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className={`p-3 rounded-xl border ${moodStyle} bg-white`}>
+            <Icon size={20} className="opacity-80" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900">{tx.merchant || tx.category}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${moodStyle}`}>
+                {tx.mood_tag}
+              </span>
+              <span className="text-xs text-slate-400 capitalize">
+                • {tx.category}
+              </span>
+            </div>
           </div>
         </div>
+        <div className="flex items-center gap-4">
+          <span className="font-bold text-lg text-slate-900">
+            {tx.currency || '$'}{Number(tx.amount).toFixed(2)}
+          </span>
+          <button 
+            onClick={() => onDelete(tx.id)}
+            className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+          >
+            <MoreHorizontal size={20} />
+          </button>
+        </div>
       </div>
-      <div className="flex items-center gap-4">
-        <span className="font-bold text-lg text-slate-900">
-          {tx.currency || '$'}{Number(tx.amount).toFixed(2)}
-        </span>
-        <button 
-          onClick={() => onDelete(tx.id)}
-          className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-        >
-          <MoreHorizontal size={20} />
-        </button>
-      </div>
+      
+      {/* Micro-reflection interface for non-essential moods */}
+      {(tx.mood_tag !== 'Essential' || reflection !== 'None') && (
+        <div className="mt-4 pt-3 border-t border-slate-50 flex items-center gap-3">
+          <span className="text-sm font-medium text-slate-500">How do you feel about this?</span>
+          <button 
+            onClick={() => handleReflect('WorthIt')}
+            disabled={isUpdating}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+              reflection === 'WorthIt' 
+                ? 'bg-emerald-100 text-emerald-700' 
+                : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+            }`}
+          >
+            <ThumbsUp size={14} /> Worth It
+          </button>
+          <button 
+            onClick={() => handleReflect('Regret')}
+            disabled={isUpdating}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+              reflection === 'Regret' 
+                ? 'bg-red-100 text-red-700' 
+                : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+            }`}
+          >
+            <ThumbsDown size={14} /> Regret
+          </button>
+        </div>
+      )}
     </div>
   );
 }
