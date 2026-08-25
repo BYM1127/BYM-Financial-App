@@ -20,7 +20,11 @@ app.get('/api/health', (req, res) => {
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/insights', insightRoutes);
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start Server (only if not running in Vercel serverless environment)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;

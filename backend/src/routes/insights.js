@@ -1,15 +1,15 @@
 const express = require('express');
-const { requireAuth, supabase } = require('../middleware/auth');
+const { supabase } = require('../middleware/auth');
 
 const router = express.Router();
-router.use(requireAuth);
+const GUEST_ID = '00000000-0000-0000-0000-000000000000';
 
 /**
  * GET /api/insights/summary
  * Returns total spend grouped by mood and category for the user
  */
 router.get('/summary', async (req, res) => {
-  const user_id = req.user.id;
+  const user_id = GUEST_ID;
   
   try {
     const { data: transactions, error } = await supabase

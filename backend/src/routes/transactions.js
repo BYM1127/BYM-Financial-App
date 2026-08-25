@@ -1,14 +1,9 @@
 const express = require('express');
-const { requireAuth, supabase } = require('../middleware/auth');
+const { supabase } = require('../middleware/auth');
 const { parseTransaction } = require('../services/gemini');
 
 const router = express.Router();
-
-// Apply auth middleware to all transaction routes
-// router.use(requireAuth); 
-// Note: For local testing without a frontend token, you can comment this out and use a mock user_id.
-// Assuming we are building the real thing, we will keep requireAuth.
-router.use(requireAuth);
+const GUEST_ID = '00000000-0000-0000-0000-000000000000';
 
 /**
  * POST /api/transactions/parse
@@ -16,6 +11,7 @@ router.use(requireAuth);
  */
 router.post('/parse', async (req, res) => {
   const { raw_text } = req.body;
+  const user_id = GUEST_ID;
   if (!raw_text) {
     return res.status(400).json({ error: 'raw_text is required' });
   }
@@ -34,7 +30,7 @@ router.post('/parse', async (req, res) => {
  * Save a confirmed transaction to the database
  */
 router.post('/', async (req, res) => {
-  const user_id = req.user.id;
+  const user_id = GUEST_ID;
   const { raw_input, amount, currency, category, merchant, mood_tag } = req.body;
 
   if (amount == null || !category || !mood_tag) {
@@ -69,7 +65,7 @@ router.post('/', async (req, res) => {
  * Fetch user transactions
  */
 router.get('/', async (req, res) => {
-  const user_id = req.user.id;
+  const user_id = GUEST_ID;
   const { startDate, endDate } = req.query;
 
   try {
@@ -101,7 +97,7 @@ router.get('/', async (req, res) => {
  * Update an existing transaction
  */
 router.patch('/:id', async (req, res) => {
-  const user_id = req.user.id;
+  const user_id = GUEST_ID;
   const { id } = req.params;
   const updates = req.body;
 
@@ -127,7 +123,7 @@ router.patch('/:id', async (req, res) => {
  * Delete a transaction
  */
 router.delete('/:id', async (req, res) => {
-  const user_id = req.user.id;
+  const user_id = GUEST_ID;
   const { id } = req.params;
 
   try {

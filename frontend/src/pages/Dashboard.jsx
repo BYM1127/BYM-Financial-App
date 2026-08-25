@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, LogOut } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 import InputBar from '../components/InputBar';
 import TransactionFeed from '../components/TransactionFeed';
 import AnalyticsPanel from '../components/AnalyticsPanel';
 import { api } from '../services/api';
-import { supabase } from '../lib/supabase';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = useState([]);
@@ -38,18 +37,8 @@ export default function Dashboard() {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden font-sans">
-      <button 
-        onClick={handleLogout}
-        className="absolute top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 bg-white/80 backdrop-blur border border-slate-200 rounded-full shadow-sm hover:shadow transition-all"
-      >
-        <LogOut size={16} /> Logout
-      </button>
 
       {/* Decorative background blur */}
       <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-blue-50 to-slate-50 pointer-events-none" />

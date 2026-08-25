@@ -1,12 +1,9 @@
-import { supabase } from '../lib/supabase';
+// In production on Vercel, the backend is available at the same domain under /api
+const API_URL = import.meta.env.PROD ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-const getAuthHeaders = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
+const getHeaders = () => {
   return {
-    'Content-Type': 'application/json',
-    ...(session ? { 'Authorization': `Bearer ${session.access_token}` } : {})
+    'Content-Type': 'application/json'
   };
 };
 
@@ -14,7 +11,7 @@ export const api = {
   async parseTransaction(raw_text) {
     const res = await fetch(`${API_URL}/transactions/parse`, {
       method: 'POST',
-      headers: await getAuthHeaders(),
+      headers: getHeaders(),
       body: JSON.stringify({ raw_text })
     });
     if (!res.ok) throw new Error('Failed to parse');
@@ -24,7 +21,7 @@ export const api = {
   async saveTransaction(data) {
     const res = await fetch(`${API_URL}/transactions`, {
       method: 'POST',
-      headers: await getAuthHeaders(),
+      headers: getHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error('Failed to save');
@@ -37,7 +34,7 @@ export const api = {
     if (endDate) url.searchParams.append('endDate', endDate);
     
     const res = await fetch(url.toString(), {
-      headers: await getAuthHeaders()
+      headers: getHeaders()
     });
     if (!res.ok) throw new Error('Failed to fetch transactions');
     return res.json();
@@ -46,7 +43,7 @@ export const api = {
   async updateTransaction(id, updates) {
     const res = await fetch(`${API_URL}/transactions/${id}`, {
       method: 'PATCH',
-      headers: await getAuthHeaders(),
+      headers: getHeaders(),
       body: JSON.stringify(updates)
     });
     if (!res.ok) throw new Error('Failed to update');
@@ -56,7 +53,7 @@ export const api = {
   async deleteTransaction(id) {
     const res = await fetch(`${API_URL}/transactions/${id}`, {
       method: 'DELETE',
-      headers: await getAuthHeaders()
+      headers: getHeaders()
     });
     if (!res.ok) throw new Error('Failed to delete');
     return res.json();
@@ -64,7 +61,7 @@ export const api = {
 
   async getInsights() {
     const res = await fetch(`${API_URL}/insights/summary`, {
-      headers: await getAuthHeaders()
+      headers: getHeaders()
     });
     if (!res.ok) throw new Error('Failed to fetch insights');
     return res.json();
