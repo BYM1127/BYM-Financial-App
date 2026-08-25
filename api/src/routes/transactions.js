@@ -31,24 +31,18 @@ router.post('/parse', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   const user_id = GUEST_ID;
-  const { raw_input, amount, currency, category, merchant, mood_tag } = req.body;
+  const { raw_input, amount, currency, category, merchant, mood_tag, type = 'expense' } = req.body;
 
   if (amount == null || !category || !mood_tag) {
-    return res.status(400).json({ error: 'amount, category, and mood_tag are required' });
+    return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
     const { data, error } = await supabase
       .from('transactions')
-      .insert([{
-        user_id,
-        raw_input: raw_input || '',
-        amount,
-        currency,
-        category,
-        merchant,
-        mood_tag
-      }])
+      .insert([
+        { user_id, raw_input, amount, currency, category, merchant, mood_tag, type }
+      ])
       .select()
       .single();
 

@@ -14,37 +14,62 @@ router.get('/summary', async (req, res) => {
   try {
     const { data: transactions, error } = await supabase
       .from('transactions')
-      .select('amount, mood_tag, category')
+      .select('*')
       .eq('user_id', user_id);
-      
+
     if (error) throw error;
-    
-    const spendByMood = {};
-    const spendByCategory = {};
-    
+
+    let total_income = 0;
+    let total_expenses = 0;
+    let categoryBreakdown = {};
+    let moodBreakdown = {};
+
     transactions.forEach(tx => {
-      const amt = Number(tx.amount);
-      spendByMood[tx.mood_tag] = (spendByMood[tx.mood_tag] || 0) + amt;
-      spendByCategory[tx.category] = (spendByCategory[tx.category] || 0) + amt;
+      const amount = parseFloat(tx.amount);
+      
+      if (tx.type === 'income') {
+        total_income += amount;
+      } else {
+        total_expenses += amount;
+
+        // Only breakdown expenses
+        if (categoryBreakdown[tx.category]) {
+          categoryBreakdown[tx.category] += amount;
+        } else {
+          categoryBreakdown[tx.category] = amount;
+        }
+
+        if (moodBreakdown[tx.mood_tag]) {
+          moodBreakdown[tx.mood_tag] += amount;
+        } else {
+          moodBreakdown[tx.mood_tag] = amount;
+        }
+      }
     });
 
-    const moodChartData = Object.keys(spendByMood).map(mood => ({
+    const in_my_pocket = total_income - total_expenses;
+
+    const spendByMood = Object.keys(moodBreakdown).map(mood => ({
       name: mood,
-      value: spendByMood[mood]
+      value: moodBreakdown[mood]
     }));
     
-    const categoryChartData = Object.keys(spendByCategory).map(cat => ({
+    const spendByCategory = Object.keys(categoryBreakdown).map(cat => ({
       name: cat,
-      value: spendByCategory[cat]
+      value: categoryBreakdown[cat]
     }));
 
     res.json({
-      spendByMood: moodChartData,
-      spendByCategory: categoryChartData
+      total_income,
+      total_expenses,
+      in_my_pocket,
+      spendByMood,
+      spendByCategory,
+      totalTransactions: transactions.length
     });
   } catch (error) {
     console.error('Insights summary error:', error);
-    res.status(500).json({ error: 'Failed to generate insights' });
+    res.status(500).json({ error: error.message });
   }
 });
 

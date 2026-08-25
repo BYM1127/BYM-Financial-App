@@ -49,21 +49,14 @@ function TransactionItem({ tx, onDelete }) {
             <Icon size={20} className="opacity-80" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900">{tx.merchant || tx.category}</h3>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${moodStyle}`}>
-                {tx.mood_tag}
-              </span>
-              <span className="text-xs text-slate-400 capitalize">
-                • {tx.category}
-              </span>
-            </div>
+            <h3 className="font-semibold text-slate-800 capitalize">{tx.merchant || tx.category}</h3>
+            <p className="text-sm text-slate-500 capitalize">{tx.mood_tag} • {tx.category}</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <span className="font-bold text-lg text-slate-900">
-            {tx.currency || '$'}{Number(tx.amount).toFixed(2)}
-          </span>
+          <div className={`font-bold ${tx.type === 'income' ? 'text-emerald-600' : 'text-slate-700'}`}>
+            {tx.type === 'income' ? '+' : '-'}{tx.currency || '$'}{Number(tx.amount).toFixed(2)}
+          </div>
           <button 
             onClick={() => onDelete(tx.id)}
             className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
